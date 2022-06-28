@@ -14,9 +14,6 @@ struct FindApi {
     #[clap(short, long, value_parser)]
     /// Path to to start in
     path: Option<String>,
-    /// If provided, print a lot
-    #[clap(short, long, action)]
-    verbose: bool,
 }
 
 fn main() {
@@ -26,11 +23,8 @@ fn main() {
         None => env::current_dir().unwrap(),
     };
     let re = regex::Regex::new(&find_api.regex).unwrap();
-    let matches = find_matches(path, &re, &find_api).unwrap();
 
-    for re_match in matches.into_iter() {
-        println!("{}", re_match);
-    }
+    let _matches = find_matches(path, &re, &find_api).unwrap();
 }
 
 fn find_matches(
@@ -51,9 +45,16 @@ fn find_matches(
             .to_string_lossy()
             .into_owned();
         if re.is_match(&sub_str) {
-            if find_api.verbose {
-                println!("{}", sub_str);
-            }
+            println!(
+                "{}",
+                sub.as_ref()
+                    .unwrap()
+                    .path()
+                    .as_path()
+                    .to_owned()
+                    .to_string_lossy()
+                    .into_owned()
+            );
             matches.push(
                 sub.as_ref()
                     .unwrap()
@@ -70,9 +71,7 @@ fn find_matches(
                     matches.extend(sub_matches);
                 }
                 Err(err) => {
-                    if find_api.verbose {
-                        println!("Error on {}: {}", sub_str, err);
-                    }
+                    println!("Error on {}: {}", sub_str, err);
                 }
             }
         }
