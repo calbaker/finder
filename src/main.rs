@@ -1,7 +1,7 @@
 use std::env;
 
 use clap::Parser;
-use regex;
+use regex::Regex;
 use std::path::PathBuf;
 
 /// Find files using regex
@@ -21,15 +21,27 @@ struct FindApi {
 
 fn main() {
     let find_api = FindApi::parse();
-    let path: PathBuf = match find_api.path {
+    let path: PathBuf = match &find_api.path {
         Some(path) => PathBuf::from(path),
         None => env::current_dir().unwrap(),
     };
     let re = regex::Regex::new(&find_api.regex).unwrap();
+    let matches = find_matches(path, &re, &find_api).unwrap();
+
+    println!("{:?}", matches);
+}
+
+fn find_matches(
+    path: PathBuf,
+    re: &Regex,
+    find_api: &FindApi,
+) -> Result<Vec<String>, std::io::Error> {
     let mut matches: Vec<String> = vec![];
-    for sub in std::fs::read_dir(path).unwrap() {
+
+    for sub in std::fs::read_dir(path)? {
         // let sub_str = PathBuf::from(sub.unwrap().path()).to_str().unwrap();
         let sub_str = sub
+            .as_ref()
             .unwrap()
             .path()
             .file_name()
@@ -40,20 +52,20 @@ fn main() {
             if find_api.verbose {
                 println!("{}", sub_str);
             }
-            matches.push(sub_str);
+            matches.push(sub_str.to_string());
+        }
+        if PathBuf::from(sub.as_ref().unwrap().path().as_path()).is_dir() {
+            match find_matches(sub.as_ref().unwrap().path(), re, find_api) {
+                Ok(sub_matches) => {
+                    matches.extend(sub_matches);
+                }
+                Err(err) => {
+                    if find_api.verbose {
+                        println!("Error on {}: {}", sub_str, err);
+                    }
+                }
+            }
         }
     }
-    println!("{:?}", matches);
-
-    //     if sub.is_dir():
-    //         try:
-    //             matches.extend(find_file_regex(re_pattern, sub))
-    //         except PermissionError:
-    //             if verbose: print(f'Access is denied: {sub}')
-    //         except OSError:
-    //             if verbose: print(f'Access is denied: {sub}')
-    //     elif re.search(re_pattern, str(sub.name)):
-    //         if verbose: print(f'found match: {sub}')
-    //         matches.append(str(sub))
-    // return matches
+    Ok(matches)
 }
