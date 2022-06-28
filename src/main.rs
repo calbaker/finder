@@ -12,7 +12,7 @@ struct FinderApi {
     #[clap(value_parser)]
     regex: String,
     #[clap(short, long, value_parser)]
-    /// Path to to start in
+    /// Optional path to to start in.  Defaults to current dir.  
     path: Option<String>,
 }
 
