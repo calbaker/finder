@@ -28,7 +28,9 @@ fn main() {
     let re = regex::Regex::new(&find_api.regex).unwrap();
     let matches = find_matches(path, &re, &find_api).unwrap();
 
-    println!("{:?}", matches);
+    for re_match in matches.into_iter() {
+        println!("{}", re_match);
+    }
 }
 
 fn find_matches(
@@ -52,7 +54,15 @@ fn find_matches(
             if find_api.verbose {
                 println!("{}", sub_str);
             }
-            matches.push(sub_str.to_string());
+            matches.push(
+                sub.as_ref()
+                    .unwrap()
+                    .path()
+                    .as_path()
+                    .to_owned()
+                    .to_string_lossy()
+                    .into_owned(),
+            );
         }
         if PathBuf::from(sub.as_ref().unwrap().path().as_path()).is_dir() {
             match find_matches(sub.as_ref().unwrap().path(), re, find_api) {
