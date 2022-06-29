@@ -4,7 +4,8 @@ use clap::Parser;
 use regex::Regex;
 use std::path::PathBuf;
 
-/// Find files using regex
+/// Find files using regex.  Put this in any folder (e.g. HOME/.finder/) and add that folder to your user `Path`
+/// to use from any terminal.  
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct FinderApi {
@@ -35,7 +36,6 @@ fn find_matches(
     let mut matches: Vec<String> = vec![];
 
     for sub in std::fs::read_dir(path)? {
-        // let sub_str = PathBuf::from(sub.unwrap().path()).to_str().unwrap();
         let sub_str = sub
             .as_ref()
             .unwrap()
@@ -77,4 +77,20 @@ fn find_matches(
         }
     }
     Ok(matches)
+}
+
+#[cfg(test)]
+mod tests {
+    use std::process::Command;
+
+    #[test]
+    pub fn test_that_cargo_toml_is_found() {
+        let output = Command::new("./target/release/finder.exe")
+            .args(&["argo"])
+            .output()
+            .expect("must run `cargo build --release` first");
+        println!("output: {:?}", String::from_utf8(output.to_owned().stdout));
+        let re = regex::Regex::new("argo").unwrap();
+        assert!(re.is_match(&String::from_utf8(output.stdout).unwrap()));
+    }
 }
