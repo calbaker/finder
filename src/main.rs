@@ -1,7 +1,6 @@
-use std::env;
-
 use clap::Parser;
 use regex::Regex;
+use std::env;
 use std::path::PathBuf;
 
 /// Find files using regex.  Put this in any folder (e.g. HOME/.finder/) and add that folder to your user `Path`
@@ -34,6 +33,7 @@ fn find_matches(
     finder_api: &FinderApi,
 ) -> Result<Vec<String>, std::io::Error> {
     let mut matches: Vec<String> = vec![];
+    let mut dirs: Vec<PathBuf> = vec![];
 
     for sub in std::fs::read_dir(path)? {
         let sub_str = sub
@@ -66,16 +66,29 @@ fn find_matches(
             );
         }
         if PathBuf::from(sub.as_ref().unwrap().path().as_path()).is_dir() {
-            match find_matches(sub.as_ref().unwrap().path(), re, finder_api) {
-                Ok(sub_matches) => {
-                    matches.extend(sub_matches);
-                }
-                Err(err) => {
-                    println!("Error on {}: {}", sub_str, err);
-                }
+            dirs.push(PathBuf::from(sub.as_ref().unwrap().path().as_path()));
+        }
+    }
+
+    for dir in dirs {
+        match find_matches(dir.clone(), re, finder_api) {
+            Ok(sub_matches) => {
+                matches.extend(sub_matches);
+            }
+            Err(err) => {
+                println!(
+                    "Error on {}: {}",
+                    dir.canonicalize()
+                        .unwrap()
+                        .into_os_string()
+                        .into_string()
+                        .unwrap(),
+                    err
+                );
             }
         }
     }
+
     Ok(matches)
 }
 
