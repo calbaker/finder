@@ -101,7 +101,9 @@ mod tests {
         let output = Command::new("./target/release/finder.exe")
             .args(&["argo"])
             .output()
-            .expect("must run `cargo build --release` first");
+            .unwrap_or(Command::new("./target/release/finder") // for linux/mac
+            .args(&["argo"])
+            .output().expect("run `cargo build --release`"));
         println!("output: {:?}", String::from_utf8(output.to_owned().stdout));
         let re = regex::Regex::new("argo").unwrap();
         assert!(re.is_match(&String::from_utf8(output.stdout).unwrap()));
