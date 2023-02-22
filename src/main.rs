@@ -3,8 +3,8 @@ use regex::Regex;
 use std::env;
 use std::path::PathBuf;
 
-/// Find files using regex.  Put this in any folder (e.g. HOME/.finder/) and add that folder to your user `Path`
-/// to use from any terminal.  
+/// Find files using regex.  Put this in any folder (e.g. HOME/.finder/)
+/// and add that folder to your user `Path` to use from any terminal.  
 #[derive(Parser)]
 #[clap(author, version, about, long_about = None)]
 struct FinderApi {
@@ -101,9 +101,12 @@ mod tests {
         let output = Command::new("./target/release/finder.exe")
             .args(&["argo"])
             .output()
-            .unwrap_or(Command::new("./target/release/finder") // for linux/mac
-            .args(&["argo"])
-            .output().expect("run `cargo build --release`"));
+            .unwrap_or(
+                Command::new("./target/release/finder") // for linux/mac
+                    .args(&["argo"])
+                    .output()
+                    .expect("run `cargo build --release`"),
+            );
         println!("output: {:?}", String::from_utf8(output.to_owned().stdout));
         let re = regex::Regex::new("argo").unwrap();
         assert!(re.is_match(&String::from_utf8(output.stdout).unwrap()));
